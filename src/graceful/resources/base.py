@@ -1,4 +1,3 @@
-import json
 import inspect
 from collections import OrderedDict
 from warnings import warn
@@ -9,6 +8,7 @@ from mimeparse import parse_mime_type
 
 from graceful.parameters import BaseParam, IntParam
 from graceful.errors import DeserializationError, ValidationError
+from graceful.media.json import JSONHandler
 
 
 class MetaResource(type):
@@ -36,9 +36,9 @@ class MetaResource(type):
         """Create params dictionary to be used in resource class namespace.
 
         Pop all parameter objects from attributes dict (namespace)
-        and store them under _params_storage_key atrribute.
+        and store them under _params_storage_key attribute.
         Also collect all params from base classes in order that ensures
-        params can be overriden.
+        params can be overridden.
 
         Args:
             bases: all base classes of created resource class
@@ -85,7 +85,7 @@ class MetaResource(type):
 
 
 class BaseResource(metaclass=MetaResource):
-    """Base resouce class with core param and response functionality.
+    """Base resource class with core param and response functionality.
 
     This base class handles resource responses, parameter deserialization,
     and validation of request included representations if serializer is
@@ -101,7 +101,7 @@ class BaseResource(metaclass=MetaResource):
             ...
 
     The ``with_context`` argument tells if resource modification methods
-    (metods injected with mixins - list/create/update/etc.) should accept
+    (methods injected with mixins - list/create/update/etc.) should accept
     the ``context`` argument in their signatures. For more details
     see :ref:`guide-context-aware-resources` section of documentation. The
     default value for ``with_context`` class keyword argument is ``False``.
@@ -109,11 +109,15 @@ class BaseResource(metaclass=MetaResource):
     .. versionchanged:: 0.3.0
         Added the ``with_context`` keyword argument.
 
+    Note:
+        The ``indent`` parameter may be used only on a supported media handler
+        such as JSON or YAML, otherwise it should be ignored by the handler.
+
     """
 
     indent = IntParam(
         """
-        JSON output indentation. Set to 0 if output should not be formated.
+        JSON output indentation. Set to 0 if output should not be formatted.
         """,
         default='0'
     )
@@ -121,6 +125,10 @@ class BaseResource(metaclass=MetaResource):
     #: Instance of serializer class used to serialize/deserialize and
     #: validate resource representations.
     serializer = None
+
+    #: Instance of media handler class used to serialize response
+    #: objects and to deserialize request objects.
+    media_handler = JSONHandler()
 
     def __new__(cls, *args, **kwargs):
         """Do some sanity checks before resource instance initialization."""
@@ -151,7 +159,7 @@ class BaseResource(metaclass=MetaResource):
         return getattr(self, self.__class__._params_storage_key)
 
     def make_body(self, resp, params, meta, content):
-        """Construct response body in ``resp`` object using JSON serialization.
+        """Construct response body/data in ``resp`` object using media handler.
 
         Args:
             resp (falcon.Response): response object where to include
@@ -170,11 +178,9 @@ class BaseResource(metaclass=MetaResource):
             'meta': meta,
             'content': content
         }
-        resp.content_type = 'application/json'
-        resp.body = json.dumps(
-            response,
-            indent=params['indent'] or None if 'indent' in params else None
-        )
+
+        self.media_handler.handle_response(
+            resp, media=response, indent=params.get('indent', 0))
 
     def allowed_methods(self):
         """Return list of allowed HTTP methods on this resource.
@@ -248,7 +254,7 @@ class BaseResource(metaclass=MetaResource):
         return description
 
     def on_options(self, req, resp, **kwargs):
-        """Respond with JSON formatted resource description on OPTIONS request.
+        """Respond with media formatted resource description on OPTIONS request.
 
         Args:
             req (falcon.Request): Optional request object. Defaults to None.
@@ -265,8 +271,8 @@ class BaseResource(metaclass=MetaResource):
            allowed HTTP methods.
         """
         resp.set_header('Allow', ', '.join(self.allowed_methods()))
-        resp.body = json.dumps(self.describe(req, resp))
-        resp.content_type = 'application/json'
+        self.media_handler.handle_response(
+            resp, media=self.describe(req, resp))
 
     def require_params(self, req):
         """Require all defined parameters from request query string.
@@ -364,7 +370,7 @@ class BaseResource(metaclass=MetaResource):
         allowed content-encoding handler to decode content body.
 
         Note:
-            Currently only JSON is allowed as content type.
+            By default, only JSON is allowed as content type.
 
         Args:
             req (falcon.Request): request object
@@ -383,13 +389,8 @@ class BaseResource(metaclass=MetaResource):
                 )
             )
 
-        if content_type == 'application/json':
-            body = req.stream.read()
-            return json.loads(body.decode('utf-8'))
-        else:
-            raise falcon.HTTPUnsupportedMediaType(
-                description="only JSON supported, got: {}".format(content_type)
-            )
+        self.media_handler.handle_request(req, content_type=content_type)
+        return req.media
 
     def require_validated(self, req, partial=False, bulk=False):
         """Require fully validated internal object dictionary.

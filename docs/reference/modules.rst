@@ -9,3 +9,4 @@ API reference
 
    graceful
    graceful.resources
+   graceful.media

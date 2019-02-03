@@ -127,7 +127,7 @@ And you're ready to query it (here with awesome [httpie](http://httpie.org)
 tool):
 
 ```
-$ http localhost:8888/v0/cats/?breed=saimese
+$ http localhost:8888/v1/cats/?breed=saimese
 HTTP/1.1 200 OK
 Connection: close
 Date: Tue, 16 Jun 2015 08:43:05 GMT
@@ -155,7 +155,7 @@ content-type: application/json
 Or access API description issuing `OPTIONS` request:
 
 ```
-$ http OPTIONS localhost:8888/v0/cats
+$ http OPTIONS localhost:8888/v1/cats
 HTTP/1.1 200 OK
 Connection: close
 Date: Tue, 16 Jun 2015 08:40:00 GMT
@@ -202,14 +202,14 @@ content-type: application/json
         },
         "indent": {
             "default": "0",
-            "details": "JSON output indentation. Set to 0 if output should not be formated.",
+            "details": "JSON output indentation. Set to 0 if output should not be formatted.",
             "label": null,
             "required": false,
             "spec": null,
             "type": "integer"
         }
     },
-    "path": "/v0/cats",
+    "path": "/v1/cats",
     "type": "list"
 }
 ```
