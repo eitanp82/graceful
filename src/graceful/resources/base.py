@@ -388,9 +388,8 @@ class BaseResource(metaclass=MetaResource):
                     req.content_type
                 )
             )
-
-        self.media_handler.handle_request(req, content_type=content_type)
-        return req.media
+        return self.media_handler.handle_request(
+            req, content_type=content_type)
 
     def require_validated(self, req, partial=False, bulk=False):
         """Require fully validated internal object dictionary.

@@ -167,8 +167,7 @@ def test_subclass_json_loads(subclass_json_handler):
 
 
 def test_handle_request(media_handler, req, media, media_json):
-    media_handler.handle_request(req, content_type=media_json)
-    assert req.media == media
+    assert media_handler.handle_request(req, content_type=media_json) == media
 
 
 def test_handle_request_unsupported_media_type(media_handler, req):
@@ -177,8 +176,8 @@ def test_handle_request_unsupported_media_type(media_handler, req):
 
 
 def test_handle_response(media_handler, resp, media):
-    media_handler.handle_response(resp, media=media)
-    assert resp.data or resp.body
+    data = media_handler.handle_response(resp, media=media)
+    assert (resp.data or resp.body) == data
     assert resp.data or isinstance(resp.body, str)
     assert resp.body or isinstance(resp.data, bytes)
 

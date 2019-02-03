@@ -16,7 +16,7 @@ Here are some resources that be used in the following examples:
     from graceful.serializers import BaseSerializer
     from graceful.fields import IntField, RawField
     from graceful.parameters import StringParam
-    from graceful.resources.generic import RetrieveAPI, PaginatedListAPI
+    from graceful.resources.generic import RetrieveAPI, ListCreateAPI
 
 
     CATS_STORAGE = [
@@ -44,10 +44,10 @@ Here are some resources that be used in the following examples:
                 raise falcon.HTTPNotFound
 
         def retrieve(self, params, meta, context, *, cat_id, **kwargs):
-            return self.get_cat(cat_id)
+            return self.get_cat(int(cat_id))
 
 
-    class BaseCatListResource(PaginatedListAPI, with_context=True):
+    class BaseCatListResource(ListCreateAPI, with_context=True):
         """List of all cats in our API."""
         serializer = CatSerializer()
 

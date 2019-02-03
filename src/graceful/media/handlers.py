@@ -84,6 +84,9 @@ class MediaHandlers(BaseMediaHandler):
             resp (falcon.Response): The response object to process
             media (object): A Python data structure to serialize
 
+        Returns:
+            A serialized (``str`` or  ``bytes``) representation of ``media``.
+
         """
         content_type = resp.content_type or self.media_type
         try:
@@ -91,8 +94,10 @@ class MediaHandlers(BaseMediaHandler):
         except AttributeError:
             default_media_type = self.media_type
         handler = self.lookup_handler(content_type, default_media_type)
-        super().handle_response(resp, media=media, handler=handler)
-        resp.content_type = handler.media_type
+        try:
+            return super().handle_response(resp, media=media, handler=handler)
+        finally:
+            resp.content_type = handler.media_type
 
     def handle_request(self, req, *, content_type=None, **kwargs):
         """Process a single :class:`falcon.Request` object.
@@ -100,6 +105,9 @@ class MediaHandlers(BaseMediaHandler):
         Args:
             req (falcon.Request): The request object to process
             content_type (str): Type of request content
+
+        Returns:
+            object: A deserialized object from a :class:`falcon.Request` body.
 
         Raises:
             falcon.HTTPUnsupportedMediaType: If `content_type` is not supported
@@ -111,7 +119,8 @@ class MediaHandlers(BaseMediaHandler):
         except AttributeError:
             default_media_type = self.media_type
         handler = self.lookup_handler(content_type, default_media_type)
-        super().handle_request(req, content_type=content_type, handler=handler)
+        return super().handle_request(
+            req, content_type=content_type, handler=handler)
 
     def lookup_handler(self, media_type, default_media_type=None):
         """Lookup media handler by media type.

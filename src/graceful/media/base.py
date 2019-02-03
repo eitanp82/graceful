@@ -61,6 +61,9 @@ class BaseMediaHandler(metaclass=ABCMeta):
             resp (falcon.Response): The response object to process
             media (object): A Python data structure to serialize
 
+        Returns:
+            A serialized (``str`` or  ``bytes``) representation of ``media``.
+
         """
         # sets the Content-Type header
         resp.content_type = self.media_type
@@ -70,6 +73,7 @@ class BaseMediaHandler(metaclass=ABCMeta):
             resp.data = data
         else:
             resp.body = data
+        return data
 
     def handle_request(self, req, *, content_type=None, **kwargs):
         """Process a single :class:`falcon.Request` object.
@@ -78,18 +82,17 @@ class BaseMediaHandler(metaclass=ABCMeta):
             req (falcon.Request): The request object to process
             content_type (str): Type of request content
 
+        Returns:
+            object: A deserialized object from a :class:`falcon.Request` body.
+
         Raises:
             falcon.HTTPUnsupportedMediaType: If `content_type` is not supported
 
         """
         content_type = content_type or req.content_type
         if content_type in self.allowed_media_types:
-            media = self.deserialize(
+            return self.deserialize(
                 req.stream, content_type, req.content_length, **kwargs)
-            try:
-                req.media = media
-            except AttributeError:
-                req._media = media
         else:
             allowed = ', '.join("'{}'".format(media_type)
                                 for media_type in self.allowed_media_types)
