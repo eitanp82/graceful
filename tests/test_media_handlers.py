@@ -1,6 +1,7 @@
 import copy
 import io
 import json
+import sys
 
 import pytest
 
@@ -257,6 +258,8 @@ def test_media_handlers_lookup_unknown_media_type(media_handlers):
         media_handlers.lookup_handler(None, 'nope/json')
 
 
+@pytest.mark.skipif(sys.version_info[:2] == (3, 5),
+                    reason='mocker issue on python3.5')
 @pytest.mark.parametrize('default_media_type', [
     'application/json',
     'application/yaml'
