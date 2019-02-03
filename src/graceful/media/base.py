@@ -11,7 +11,8 @@ class BaseMediaHandler(metaclass=ABCMeta):
             deserialize the body stream of request objects
 
     Attributes:
-        allowed_media_types (set): All media types supported for deserialization
+        allowed_media_types (set): All media types supported for
+            deserialization
 
     """
 
