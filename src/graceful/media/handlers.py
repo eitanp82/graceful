@@ -86,7 +86,10 @@ class MediaHandlers(BaseMediaHandler):
 
         """
         content_type = resp.content_type or self.media_type
-        default_media_type = resp.options.default_media_type
+        try:
+            default_media_type = resp.options.default_media_type
+        except AttributeError:
+            default_media_type = self.media_type
         handler = self.lookup_handler(content_type, default_media_type)
         super().handle_response(resp, media=media, handler=handler)
         resp.content_type = handler.media_type
@@ -103,7 +106,10 @@ class MediaHandlers(BaseMediaHandler):
 
         """
         content_type = content_type or req.content_type
-        default_media_type = req.options.default_media_type
+        try:
+            default_media_type = req.options.default_media_type
+        except AttributeError:
+            default_media_type = self.media_type
         handler = self.lookup_handler(content_type, default_media_type)
         super().handle_request(req, content_type=content_type, handler=handler)
 

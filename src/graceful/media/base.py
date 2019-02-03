@@ -83,8 +83,12 @@ class BaseMediaHandler(metaclass=ABCMeta):
         """
         content_type = content_type or req.content_type
         if content_type in self.allowed_media_types:
-            req._media = self.deserialize(
+            media = self.deserialize(
                 req.stream, content_type, req.content_length, **kwargs)
+            try:
+                req.media = media
+            except AttributeError:
+                req._media = media
         else:
             allowed = ', '.join("'{}'".format(media_type)
                                 for media_type in self.allowed_media_types)
