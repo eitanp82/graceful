@@ -23,6 +23,7 @@ class MediaHandlers(BaseMediaHandler):
     """
 
     def __init__(self, default_media_type='application/json', handlers=None):
+        """The __init__ method documented in the class level."""
         self.default_media_type = default_media_type
         self.handlers = handlers or {
             'application/json': JSONHandler(),
